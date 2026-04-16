@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/services/ocr_service.dart';
 
@@ -20,7 +21,47 @@ class _ScannerScreenState extends State<ScannerScreen> {
   String? _recognizedText;
   bool _isProcessing = false;
 
+  Future<bool> _ensureCameraPermission() async {
+    var cameraStatus = await Permission.camera.status;
+
+    if (cameraStatus.isGranted) {
+      return true;
+    }
+
+    if (cameraStatus.isDenied) {
+      cameraStatus = await Permission.camera.request();
+      if (cameraStatus.isGranted) {
+        return true;
+      }
+    }
+
+    if (cameraStatus.isPermanentlyDenied && mounted) {
+      _showSettingsSnackBar(
+        message:
+            'Camera permission is permanently denied. Please enable it in App Settings to scan prescriptions.',
+      );
+    }
+
+    return false;
+  }
+
+  void _showSettingsSnackBar({required String message}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
+        ),
+      );
+  }
+
   Future<void> _captureAndScan() async {
+    final hasCameraPermission = await _ensureCameraPermission();
+    if (!hasCameraPermission) {
+      return;
+    }
+
     try {
       final pickedImage = await _imagePicker.pickImage(
         source: ImageSource.camera,
