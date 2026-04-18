@@ -18,6 +18,12 @@ dependencies:
   google_maps_flutter: ^2.5.3
   location: ^5.0.3
 
+  # --- MAP & ROUTING STACK (ADDED FOR PHARMACY NAVIGATOR) ---
+  flutter_map: ^6.1.0 # Added for OpenStreetMap rendering
+  latlong2: ^0.9.0    # Added for coordinate math
+  http: ^1.1.0        # Added for OSRM routing and Overpass API
+  geolocator: ^10.1.0 # Added for high-accuracy distance sorting
+
   # --- AI / OCR & CAMERA STACK ---
   google_mlkit_text_recognition: ^0.13.0
   image_picker: ^1.0.7
@@ -27,10 +33,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  
+
   # --- GENERATORS FOR RIVERPOD ---
   build_runner: ^2.4.8
   riverpod_generator: ^2.4.0
 
 flutter:
   uses-material-design: true
+
+  # --- ASSETS SECTION (ADDED FOR PHARMACY DATA) ---
+  assets:
+    - lib/features/pharmacy_map/data/pharmacies12345.json
