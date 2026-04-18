@@ -30,7 +30,16 @@ class ApiClient {
 
   // Simple error handling for the Hackathon
   String _handleError(DioException e) {
-    return e.response?.data['message'] ??
-        "Something went wrong. Check your connection.";
+    final dynamic data = e.response?.data;
+
+    if (data is Map<String, dynamic> && data['message'] is String) {
+      return data['message'] as String;
+    }
+
+    if (data is String && data.trim().isNotEmpty) {
+      return data;
+    }
+
+    return "Something went wrong. Check your connection.";
   }
 }
