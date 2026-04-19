@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/main_entry_screen.dart';
+import '../../../core/index.dart';
 import '../providers/auth_controller.dart';
 import '../providers/auth_state.dart';
-import 'welcome_page.dart';
+import 'landing_screen.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -16,7 +17,7 @@ class AuthGate extends ConsumerWidget {
     if (authState.status == AuthStatus.initial ||
         authState.status == AuthStatus.loading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: AppLoadingSpinner(size: AppSpinnerSize.large)),
       );
     }
 
@@ -24,6 +25,6 @@ class AuthGate extends ConsumerWidget {
       return const MainEntryScreen();
     }
 
-    return const WelcomePage();
+    return const LandingScreen();
   }
 }

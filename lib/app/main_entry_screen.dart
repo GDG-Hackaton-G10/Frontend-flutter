@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../features/home/presentation/screens/home_screen.dart';
+import '../features/home/presentation/screens/bento_home.dart';
 import '../features/scanner/presentation/screens/scanner_screen.dart';
 import '../features/pharmacy_map/presentation/screens/map_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
@@ -16,7 +16,7 @@ class _MainEntryScreenState extends State<MainEntryScreen> {
 
   // This list holds the screens we just created
   final List<Widget> _pages = [
-    const HomeScreen(),
+    const BentoHomeScreen(),
     const ScannerScreen(),
     const MapScreen(),
     const ProfileScreen(),

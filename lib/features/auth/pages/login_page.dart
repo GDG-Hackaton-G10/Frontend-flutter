@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/main_entry_screen.dart';
 import '../providers/auth_controller.dart';
 import '../providers/auth_state.dart';
 import '../widgets/auth_brand_header.dart';
@@ -35,6 +36,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authControllerProvider, (previous, next) {
+      if (!mounted) {
+        return;
+      }
+
+      if (next.status == AuthStatus.authenticated) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainEntryScreen()),
+          (route) => false,
+        );
+      }
+    });
+
     final state = ref.watch(authControllerProvider);
     final loading = state.status == AuthStatus.loading;
     final theme = Theme.of(context);
@@ -147,7 +161,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Don\'t have account? ', style: theme.textTheme.bodyMedium),
+                      Text(
+                        'Don\'t have account? ',
+                        style: theme.textTheme.bodyMedium,
+                      ),
                       GestureDetector(
                         onTap: loading
                             ? null
@@ -185,10 +202,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return;
     }
 
-    await ref.read(authControllerProvider.notifier).login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    await ref
+        .read(authControllerProvider.notifier)
+        .login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
   }
 
   String? _validateEmail(String? value) {
