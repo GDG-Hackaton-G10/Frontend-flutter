@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/services/ocr_service.dart';
+import '../../../pharmacy_map/presentation/screens/map_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -54,6 +55,35 @@ class _ScannerScreenState extends State<ScannerScreen> {
           action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
         ),
       );
+  }
+
+  String? _extractFirstDetectedString(String? text) {
+    if (text == null) {
+      return null;
+    }
+
+    final lines = text
+        .split(RegExp(r'[\r\n]+'))
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+
+    if (lines.isEmpty) {
+      return null;
+    }
+
+    return lines.first;
+  }
+
+  void _openMapWithQuery() {
+    final detectedQuery = _extractFirstDetectedString(_recognizedText);
+    if (detectedQuery == null || detectedQuery.isEmpty) {
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => MapScreen(searchQuery: detectedQuery)),
+    );
   }
 
   Future<void> _captureAndScan() async {
@@ -154,6 +184,22 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     ),
                     const SizedBox(height: 16),
                     _ResultCard(recognizedText: _recognizedText),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _isProcessing || _recognizedText == null
+                          ? null
+                          : _openMapWithQuery,
+                      icon: const Icon(Icons.map_outlined),
+                      label: const Text('Confirm and Open Map'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1A237E),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
