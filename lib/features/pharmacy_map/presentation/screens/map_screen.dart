@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:smart_prescription_navigator/core/index.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -26,12 +27,14 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _currentUserLocation;
   StreamSubscription<Position>? _positionStream;
   bool _isLoading = false;
+  bool _isFilterLoading = false;
   String? _activeQuery;
 
   @override
   void initState() {
     super.initState();
     _activeQuery = _normalizeQuery(widget.searchQuery);
+    _isFilterLoading = _activeQuery != null;
     _startLocationTracking();
 
     if (_activeQuery != null) {
@@ -122,7 +125,32 @@ class _MapScreenState extends State<MapScreen> {
 
   void _filterByMedicine(String query) {
     _activeQuery = _normalizeQuery(query);
+
+    if (_activeQuery == null) {
+      _applyCurrentFilter(moveCamera: true);
+      if (mounted) {
+        setState(() {
+          _isFilterLoading = false;
+        });
+      }
+      return;
+    }
+
+    if (_allPharmacies.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isFilterLoading = true;
+        });
+      }
+      return;
+    }
+
     _applyCurrentFilter(moveCamera: true);
+    if (mounted) {
+      setState(() {
+        _isFilterLoading = false;
+      });
+    }
   }
 
   // --- LOGIC: LOADING & SORTING ---
@@ -413,16 +441,25 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                   ),
-                  if (_isLoading)
-                    const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                  if (_isLoading || _isFilterLoading)
+                    const AppLoadingSpinner(size: AppSpinnerSize.small),
                 ],
               ),
             ),
           ),
+
+          if (_isFilterLoading)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.08),
+                child: const Center(
+                  child: AppLoadingSpinner(
+                    size: AppSpinnerSize.large,
+                    text: 'Finding matching pharmacies...',
+                  ),
+                ),
+              ),
+            ),
 
           // 3. SCROLLABLE DISTANCE LIST
           DraggableScrollableSheet(
