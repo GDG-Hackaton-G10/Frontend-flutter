@@ -4,11 +4,8 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
-<<<<<<< HEAD
-  geolocator_windows
-=======
   flutter_secure_storage_windows
->>>>>>> feature/auth
+  geolocator_windows
   permission_handler_windows
 )
 
