@@ -10,7 +10,9 @@ import '../widgets/auth_or_divider.dart';
 import '../widgets/auth_primary_button.dart';
 import '../widgets/auth_screen_frame.dart';
 import '../widgets/auth_social_button.dart';
+
 import '../widgets/auth_text_field.dart';
+import '../../../home/presentation/bento_home_screen.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -124,8 +126,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     validator: _validatePassword,
                     prefixIcon: Icons.lock_outline_rounded,
                     suffixIcon: IconButton(
-                      icon: Icon(_hidePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                      onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                      icon: Icon(
+                        _hidePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () =>
+                          setState(() => _hidePassword = !_hidePassword),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -139,8 +146,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     onFieldSubmitted: (_) => _submit(),
                     prefixIcon: Icons.lock_reset_rounded,
                     suffixIcon: IconButton(
-                      icon: Icon(_hideConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                      onPressed: () => setState(() => _hideConfirmPassword = !_hideConfirmPassword),
+                      icon: Icon(
+                        _hideConfirmPassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () => setState(
+                        () => _hideConfirmPassword = !_hideConfirmPassword,
+                      ),
                     ),
                   ),
                   Row(
@@ -150,7 +163,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         value: _agreeToTerms,
                         onChanged: loading
                             ? null
-                            : (value) => setState(() => _agreeToTerms = value ?? false),
+                            : (value) => setState(
+                                () => _agreeToTerms = value ?? false,
+                              ),
                         activeColor: const Color(0xFF2F6EF3),
                       ),
                       Expanded(
@@ -164,7 +179,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       ),
                     ],
                   ),
-                  if (state.message != null && state.status == AuthStatus.error) ...[
+                  if (state.message != null &&
+                      state.status == AuthStatus.error) ...[
                     AuthMessageBanner(message: state.message!),
                     const SizedBox(height: 12),
                   ],
@@ -177,12 +193,38 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Do you have account? ', style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        'Do you have account? ',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                       TextButton(
-                        onPressed: loading ? null : () => Navigator.of(context).pop(),
+                        onPressed: loading
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text('Sign In'),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => const BentoHomeScreen(),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 24,
+                      ),
+                    ),
+                    child: const Text('Continue as Guest'),
                   ),
                 ],
               ),
@@ -197,11 +239,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final valid = _formKey.currentState?.validate() ?? false;
     if (!valid || !_agreeToTerms) return;
 
-    await ref.read(authControllerProvider.notifier).register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
-    );
+    await ref
+        .read(authControllerProvider.notifier)
+        .register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          name: _nameController.text.trim().isEmpty
+              ? null
+              : _nameController.text.trim(),
+        );
 
     if (!mounted) return;
 
@@ -219,7 +265,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final isEmail = RegExp(pattern).hasMatch(email);
     final isPhone = RegExp(r'^[0-9+()\-\s]{7,}$').hasMatch(email);
 
-    if (!isEmail && !isPhone) return 'Please enter a valid email or phone number';
+    if (!isEmail && !isPhone)
+      return 'Please enter a valid email or phone number';
     return null;
   }
 
