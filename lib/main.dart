@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_prescription_navigator/core/index.dart';
-
-import 'features/auth/pages/auth_wrapper.dart';
+import 'package:smart_prescription_navigator/features/onboarding/onboarding_gate.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -17,11 +16,11 @@ class MyApp extends ConsumerWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Pharmacy App',
+      title: 'Smart Prescription Navigator',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      home: const AuthWrapper(),
+      home: const OnboardingGate(),
     );
   }
 }

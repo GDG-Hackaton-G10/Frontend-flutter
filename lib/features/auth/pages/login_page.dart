@@ -1,19 +1,15 @@
+import '../../../core/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../app/main_entry_screen.dart';
 import '../providers/auth_controller.dart';
 import '../providers/auth_state.dart';
-import '../widgets/auth_brand_header.dart';
 import '../widgets/auth_hero_illustration.dart';
-import '../widgets/auth_message_banner.dart';
-import '../widgets/auth_or_divider.dart';
 import '../widgets/auth_primary_button.dart';
-import '../widgets/auth_screen_frame.dart';
-import '../widgets/auth_social_button.dart';
 import '../widgets/auth_text_field.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
+import '../../home/presentation/screens/main_navigation_wrapper.dart';
+import '../../pharmacy/presentation/screens/pharmacy_dashboard_screen.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -26,6 +22,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  int _roleIndex = 0;
 
   @override
   void dispose() {
@@ -36,202 +33,229 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(authControllerProvider, (previous, next) {
-      if (!mounted) {
-        return;
-      }
-
-      if (next.status == AuthStatus.authenticated) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const MainEntryScreen()),
-          (route) => false,
-        );
-      }
-    });
-
     final state = ref.watch(authControllerProvider);
     final loading = state.status == AuthStatus.loading;
-    final theme = Theme.of(context);
 
-    return AuthScreenFrame(
-      showBackButton: true,
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          const AuthHeroIllustration(
-            icon: Icons.waving_hand_rounded,
-            backgroundColor: Color(0xFF2F6EF3),
-            iconColor: Colors.white,
-          ),
-          const SizedBox(height: 14),
-          const AuthBrandHeader(
-            title: 'Sign In',
-            subtitle:
-                'It was popularised in the 1960s with the release of Letraset sheets containing lorem ipsum.',
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(34),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 28,
-                  offset: const Offset(0, 18),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 32),
+              const AuthHeroIllustration(
+                icon: Icons.waving_hand_rounded,
+                backgroundColor: Color(0xFF2563EB),
+                iconColor: Colors.white,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Sign In',
+                style: TextStyle(
+                  color: Color(0xFF1E293B),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 32,
+                  letterSpacing: -1.2,
                 ),
-              ],
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      AuthSocialButton(
-                        label: 'Facebook',
-                        icon: Icons.facebook,
-                        filled: true,
-                        onPressed: () {},
-                      ),
-                      const SizedBox(width: 12),
-                      AuthSocialButton(
-                        label: 'Google',
-                        icon: Icons.g_mobiledata_rounded,
-                        onPressed: () {},
-                      ),
-                    ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Sign in as a user or pharmacy owner.',
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 28),
+              SegmentedButton<int>(
+                style: SegmentedButton.styleFrom(
+                  selectedBackgroundColor: const Color(0xFF2563EB),
+                  selectedForegroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF1E293B),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
-                  const SizedBox(height: 14),
-                  const AuthOrDivider(),
-                  const SizedBox(height: 14),
-                  AuthTextField(
-                    controller: _emailController,
-                    label: 'Email Address',
-                    hint: 'solaiman51544@gmail.com',
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    validator: _validateEmail,
-                    prefixIcon: Icons.mail_outline_rounded,
-                  ),
-                  const SizedBox(height: 12),
-                  AuthTextField(
-                    controller: _passwordController,
-                    label: 'Password',
-                    hint: '••••••••',
-                    obscureText: true,
-                    validator: _validatePassword,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                    prefixIcon: Icons.lock_outline_rounded,
-                  ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: loading
-                          ? null
-                          : () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const ForgotPasswordPage(),
-                                ),
-                              );
-                            },
-                      child: const Text('Forgot Password'),
+                ),
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Individual User')),
+                  ButtonSegment(value: 1, label: Text('Pharmacy Owner')),
+                ],
+                selected: <int>{_roleIndex},
+                onSelectionChanged: (newSelection) {
+                  setState(() => _roleIndex = newSelection.first);
+                },
+              ),
+              const SizedBox(height: 36),
+              Container(
+                padding: const EdgeInsets.all(28),
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                  ),
-                  if (state.message != null &&
-                      (state.status == AuthStatus.error ||
-                          state.status == AuthStatus.unauthenticated)) ...[
-                    AuthMessageBanner(
-                      message: state.message!,
-                      isError: state.status == AuthStatus.error,
-                    ),
-                    const SizedBox(height: 12),
                   ],
-                  AuthPrimaryButton(
-                    label: 'Sign In',
-                    loading: loading,
-                    onPressed: _submit,
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Don\'t have account? ',
-                        style: theme.textTheme.bodyMedium,
+                      AuthTextField(
+                        controller: _emailController,
+                        label: 'Email Address',
+                        hint: 'your@email.com',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _validateEmail,
+                        prefixIcon: Icons.mail_outline_rounded,
+                        // High-contrast text and hint handled in widget
                       ),
-                      GestureDetector(
-                        onTap: loading
-                            ? null
-                            : () {
-                                Navigator.of(context).push(
+                      const SizedBox(height: 18),
+                      AuthTextField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        hint: '••••••••',
+                        obscureText: true,
+                        validator: _validatePassword,
+                        prefixIcon: Icons.lock_outline_rounded,
+                        // High-contrast text and hint handled in widget
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: loading
+                              ? null
+                              : () => Navigator.push(
+                                  context,
                                   MaterialPageRoute(
-                                    builder: (_) => const RegisterPage(),
+                                    builder: (_) => const ForgotPasswordPage(),
                                   ),
-                                );
-                              },
-                        child: Text(
-                          'Sign Up',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w700,
-                            decoration: TextDecoration.underline,
-                            decorationColor: theme.colorScheme.primary,
+                                ),
+                          child: const Text(
+                            'Forgot Password?',
+                            style: TextStyle(color: Color(0xFF2F6EF3)),
                           ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      AuthPrimaryButton(
+                        label: 'Sign In',
+                        loading: loading,
+                        onPressed: _submit,
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Don\'t have account? ',
+                            style: TextStyle(color: Color(0xFF64748B)),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterPage(),
+                              ),
+                            ),
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: Color(0xFF10B981),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
+  // ... (Keep existing _submit and _validate methods)
   Future<void> _submit() async {
     final valid = _formKey.currentState?.validate() ?? false;
-    if (!valid) {
-      return;
-    }
+    if (!valid) return;
 
-    await ref
-        .read(authControllerProvider.notifier)
-        .login(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+    if (_roleIndex == 0) {
+      ref
+          .read(authProvider.notifier)
+          .loginAsPatient(
+            _emailController.text.trim(),
+            'uid_${DateTime.now().millisecondsSinceEpoch}',
+          );
+      _showSuccessAndNavigate(
+        const MainNavigationWrapper(),
+        'Sign-in Successful!',
+      );
+    } else {
+      ref
+          .read(authProvider.notifier)
+          .loginAsPharmacy(
+            _emailController.text.trim(),
+            'uid_${DateTime.now().millisecondsSinceEpoch}',
+          );
+      ref.read(authProvider.notifier).updateProfileStatus(true);
+      _showSuccessAndNavigate(
+        const PharmacyDashboardScreen(),
+        'Sign-in Successful!',
+      );
+    }
+  }
+
+  Future<void> _showSuccessAndNavigate(
+    Widget destination,
+    String message,
+  ) async {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white),
+              const SizedBox(width: 12),
+              Text(message),
+            ],
+          ),
+          backgroundColor: const Color(0xFF16A34A),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(milliseconds: 1400),
+        ),
+      );
+
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => destination),
+      (route) => false,
+    );
   }
 
   String? _validateEmail(String? value) {
-    final email = value?.trim() ?? '';
-    if (email.isEmpty) {
-      return 'Email is required';
-    }
-
-    const pattern = r'^[^@\s]+@[^@\s]+\.[^@\s]+$';
-    final regex = RegExp(pattern);
-    if (!regex.hasMatch(email)) {
-      return 'Please enter a valid email';
-    }
+    if (value == null || value.isEmpty) return 'Email is required';
     return null;
   }
 
   String? _validatePassword(String? value) {
-    final password = value ?? '';
-    if (password.isEmpty) {
-      return 'Password is required';
-    }
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters';
-    }
+    if (value == null || value.isEmpty) return 'Password is required';
     return null;
   }
 }

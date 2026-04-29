@@ -1,15 +1,17 @@
+import '../../../core/providers/auth_provider.dart';
+// import '../../../core/auth/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/auth_controller.dart';
-import '../providers/auth_state.dart';
+// import '../providers/auth_controller.dart';
+// import '../providers/auth_state.dart';
 import '../widgets/auth_brand_header.dart';
 import '../widgets/auth_hero_illustration.dart';
-import '../widgets/auth_message_banner.dart';
-import '../widgets/auth_or_divider.dart';
+// import '../widgets/auth_message_banner.dart';
+// import '../widgets/auth_or_divider.dart';
 import '../widgets/auth_primary_button.dart';
 import '../widgets/auth_screen_frame.dart';
-import '../widgets/auth_social_button.dart';
+// import '../widgets/auth_social_button.dart';
 import '../widgets/auth_text_field.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
@@ -25,9 +27,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _pharmacyNameController = TextEditingController();
+  final _pharmacyLocationController = TextEditingController();
   bool _agreeToTerms = true;
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
+  int _roleIndex = 0; // 0 = User, 1 = Pharmacy
 
   @override
   void dispose() {
@@ -35,13 +40,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _pharmacyNameController.dispose();
+    _pharmacyLocationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(authControllerProvider);
-    final loading = state.status == AuthStatus.loading;
+    final state = ref.watch(authProvider);
+    final loading = state.isLoading;
 
     return AuthScreenFrame(
       showBackButton: true,
@@ -54,21 +61,56 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             iconColor: Colors.white,
           ),
           const SizedBox(height: 14),
-          const AuthBrandHeader(
-            title: 'Sign Up',
-            subtitle:
-                'It was popularised in the 1960s with the release of Letraset sheets containing lorem ipsum.',
+          Theme(
+            data: Theme.of(context).copyWith(
+              textTheme: Theme.of(context).textTheme.copyWith(
+                headlineMedium: Theme.of(context).textTheme.headlineMedium
+                    ?.copyWith(
+                      color: const Color(0xFF0F172A),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                    ),
+                bodyMedium: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFF334155),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+            child: const AuthBrandHeader(
+              title: 'Sign Up',
+              subtitle: 'Create your account as a user or pharmacy owner.',
+            ),
           ),
           const SizedBox(height: 18),
+          // Role toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 0, label: Text('Individual User')),
+                ButtonSegment(value: 1, label: Text('Pharmacy Owner')),
+              ],
+              selected: <int>{_roleIndex},
+              onSelectionChanged: (newSelection) {
+                setState(() => _roleIndex = newSelection.first);
+              },
+            ),
+          ),
           Container(
-            padding: const EdgeInsets.all(22),
+            padding: const EdgeInsets.all(28),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(34),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 30,
+                  color: Colors.black.withOpacity(0.18),
+                  blurRadius: 32,
                   offset: const Offset(0, 18),
                 ),
               ],
@@ -78,37 +120,29 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      AuthSocialButton(
-                        label: 'Facebook',
-                        icon: Icons.facebook,
-                        filled: true,
-                        onPressed: () {},
-                      ),
-                      const SizedBox(width: 12),
-                      AuthSocialButton(
-                        label: 'Google',
-                        icon: Icons.g_mobiledata_rounded,
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  const AuthOrDivider(),
-                  const SizedBox(height: 14),
-                  AuthTextField(
-                    controller: _nameController,
-                    label: 'Name',
-                    hint: 'Name',
-                    textInputAction: TextInputAction.next,
-                    prefixIcon: Icons.person_outline_rounded,
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  if (_roleIndex == 1) ...[
+                    AuthTextField(
+                      controller: _pharmacyNameController,
+                      label: 'Pharmacy Name',
+                      hint: 'e.g. City Pharmacy',
+                      textInputAction: TextInputAction.next,
+                      prefixIcon: Icons.local_pharmacy_rounded,
+                    ),
+                    const SizedBox(height: 12),
+                    AuthTextField(
+                      controller: _pharmacyLocationController,
+                      label: 'Pharmacy Address',
+                      hint: 'e.g. 123 Main St',
+                      textInputAction: TextInputAction.next,
+                      prefixIcon: Icons.location_on_outlined,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   AuthTextField(
                     controller: _emailController,
-                    label: 'Email/Phone Number',
-                    hint: 'Email/Phone Number',
+                    label: 'Email Address',
+                    hint: 'your@email.com',
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     validator: _validateEmail,
@@ -124,8 +158,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     validator: _validatePassword,
                     prefixIcon: Icons.lock_outline_rounded,
                     suffixIcon: IconButton(
-                      icon: Icon(_hidePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                      onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                      icon: Icon(
+                        _hidePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () =>
+                          setState(() => _hidePassword = !_hidePassword),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -139,8 +178,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     onFieldSubmitted: (_) => _submit(),
                     prefixIcon: Icons.lock_reset_rounded,
                     suffixIcon: IconButton(
-                      icon: Icon(_hideConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                      onPressed: () => setState(() => _hideConfirmPassword = !_hideConfirmPassword),
+                      icon: Icon(
+                        _hideConfirmPassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () => setState(
+                        () => _hideConfirmPassword = !_hideConfirmPassword,
+                      ),
                     ),
                   ),
                   Row(
@@ -150,24 +195,26 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         value: _agreeToTerms,
                         onChanged: loading
                             ? null
-                            : (value) => setState(() => _agreeToTerms = value ?? false),
-                        activeColor: const Color(0xFF2F6EF3),
+                            : (value) => setState(
+                                () => _agreeToTerms = value ?? false,
+                              ),
+                        activeColor: const Color(0xFF10B981),
+                        checkColor: Colors.white,
                       ),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(top: 12),
                           child: Text(
                             'I agree to the Terms of Service and Privacy Policy',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.white),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  if (state.message != null && state.status == AuthStatus.error) ...[
-                    AuthMessageBanner(message: state.message!),
-                    const SizedBox(height: 12),
-                  ],
+                  // Error message handling removed (no .message/.status in AuthState)
+                  const SizedBox(height: 18),
                   AuthPrimaryButton(
                     label: loading ? 'Creating Account...' : 'Create Account',
                     loading: loading,
@@ -177,10 +224,29 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Do you have account? ', style: Theme.of(context).textTheme.bodyMedium),
-                      TextButton(
-                        onPressed: loading ? null : () => Navigator.of(context).pop(),
-                        child: const Text('Sign In'),
+                      Text(
+                        'Already have account? ',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: loading
+                            ? null
+                            : () {
+                                Navigator.of(context).pop();
+                              },
+                        child: Text(
+                          'Sign In',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: const Color(0xFF10B981),
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                                decorationColor: const Color(0xFF10B981),
+                              ),
+                        ),
                       ),
                     ],
                   ),
@@ -197,18 +263,27 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final valid = _formKey.currentState?.validate() ?? false;
     if (!valid || !_agreeToTerms) return;
 
-    await ref.read(authControllerProvider.notifier).register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
-    );
-
-    if (!mounted) return;
-
-    final state = ref.read(authControllerProvider);
-    if (state.status == AuthStatus.authenticated) {
-      Navigator.of(context).pop();
+    if (_roleIndex == 0) {
+      ref
+          .read(authProvider.notifier)
+          .loginAsPatient(
+            _emailController.text.trim(),
+            'uid_${DateTime.now().millisecondsSinceEpoch}',
+          );
+    } else {
+      ref
+          .read(authProvider.notifier)
+          .loginAsPharmacy(
+            _emailController.text.trim(),
+            'uid_${DateTime.now().millisecondsSinceEpoch}',
+          );
+      ref.read(authProvider.notifier).updateProfileStatus(true);
     }
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Account Created!')));
+    // No navigation here; AuthWrapper will handle redirect.
   }
 
   String? _validateEmail(String? value) {
@@ -219,7 +294,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final isEmail = RegExp(pattern).hasMatch(email);
     final isPhone = RegExp(r'^[0-9+()\-\s]{7,}$').hasMatch(email);
 
-    if (!isEmail && !isPhone) return 'Please enter a valid email or phone number';
+    if (!isEmail && !isPhone)
+      return 'Please enter a valid email or phone number';
     return null;
   }
 

@@ -18,334 +18,325 @@ class BentoHomeScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              sliver: SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: AppTheme.border),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x120F172A),
-                        blurRadius: 26,
-                        offset: Offset(0, 14),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppTheme.warning.withValues(
-                                          alpha: 0.95,
-                                        ),
-                                        const Color(0xFFFFD966),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.wb_sunny_rounded,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Good Morning, Daniel',
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    color: AppTheme.textPrimary,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Your command center is ready. Start a scan and route patients to nearby pharmacies faster.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 14,
-                                height: 1.5,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Container(
-                        width: 68,
-                        height: 68,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              scheme.primary.withValues(alpha: 0.9),
-                              scheme.tertiary.withValues(alpha: 0.9),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.65),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          color: Colors.white,
-                          size: 34,
-                        ),
-                      ),
-                    ],
-                  ),
+    return SafeArea(
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
+            sliver: SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppTheme.border),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x120F172A),
+                      blurRadius: 26,
+                      offset: Offset(0, 14),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isNarrow = constraints.maxWidth < 360;
-                    return Container(
-                      constraints: const BoxConstraints(minHeight: 264),
-                      padding: const EdgeInsets.all(22),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.warning.withValues(alpha: 0.95),
+                                      const Color(0xFFFFD966),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.wb_sunny_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Good Morning, Daniel',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: AppTheme.textPrimary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Your command center is ready. Start a scan and route patients to nearby pharmacies faster.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 68,
+                      height: 68,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            scheme.primary,
-                            const Color(0xFF5B6CFA),
-                            const Color(0xFF7C4DFF),
+                            scheme.primary.withValues(alpha: 0.9),
+                            scheme.tertiary.withValues(alpha: 0.9),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(22),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.36),
+                          color: Colors.white.withValues(alpha: 0.65),
                           width: 1,
                         ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x332563EB),
-                            blurRadius: 28,
-                            offset: Offset(0, 16),
-                          ),
-                        ],
                       ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            right: -8,
-                            bottom: -14,
-                            child: Icon(
-                              Icons.document_scanner_outlined,
-                              size: 132,
-                              color: Colors.white.withValues(alpha: 0.18),
-                            ),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: Colors.white,
+                        size: 34,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverToBoxAdapter(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isNarrow = constraints.maxWidth < 360;
+                  return Container(
+                    constraints: const BoxConstraints(minHeight: 264),
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          scheme.primary,
+                          const Color(0xFF5B6CFA),
+                          const Color(0xFF7C4DFF),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.36),
+                        width: 1,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x332563EB),
+                          blurRadius: 28,
+                          offset: Offset(0, 16),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          right: -8,
+                          bottom: -14,
+                          child: Icon(
+                            Icons.document_scanner_outlined,
+                            size: 132,
+                            color: Colors.white.withValues(alpha: 0.18),
                           ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Hero Scan',
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hero Scan',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.86),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Scan Prescription',
+                              style: theme.textTheme.headlineLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: isNarrow ? 26 : 30,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 340),
+                              child: Text(
+                                'Capture labels in one tap, extract medicine names, and jump directly to pharmacies.',
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.86),
-                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  fontSize: 14,
+                                  height: 1.5,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Scan Prescription',
-                                style: theme.textTheme.headlineLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: isNarrow ? 26 : 30,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 340,
-                                ),
-                                child: Text(
-                                  'Capture labels in one tap, extract medicine names, and jump directly to pharmacies.',
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.92),
-                                    fontSize: 14,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.accent.withValues(
-                                        alpha: 0.42,
-                                      ),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
+                            ),
+                            const SizedBox(height: 18),
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.accent.withValues(
+                                      alpha: 0.42,
                                     ),
-                                  ],
-                                ),
-                                child: AppButton.primary(
-                                  label: 'Launch Scanner',
-                                  leadingIcon: Icons.camera_alt_rounded,
-                                  onPressed: () => _openScreen(
-                                    context,
-                                    const ScannerScreen(),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
                                   ),
+                                ],
+                              ),
+                              child: AppButton.primary(
+                                label: 'Launch Scanner',
+                                leadingIcon: Icons.camera_alt_rounded,
+                                onPressed: () =>
+                                    _openScreen(context, const ScannerScreen()),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
+            sliver: SliverToBoxAdapter(
+              child: AnimationLimiter(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    final gap = 14.0;
+                    final itemWidth = (width - gap) / 2;
+                    final shortHeight = itemWidth * 0.76;
+                    final tallHeight = itemWidth * 1.02;
+
+                    final tiles = [
+                      _FeatureTile(
+                        height: tallHeight,
+                        title: 'Nearby Pharmacies',
+                        subtitle:
+                            'Locate the best-matched pharmacies near your current location.',
+                        icon: Icons.local_pharmacy_rounded,
+                        iconGradient: [AppTheme.secondary, AppTheme.accent],
+                        buttonLabel: 'Open Map',
+                        onPressed: () =>
+                            _openScreen(context, const MapScreen()),
+                      ),
+                      _QuickStatsTile(height: shortHeight),
+                      _FeatureTile(
+                        height: shortHeight,
+                        title: 'My Profile',
+                        subtitle: 'Health details and preferences.',
+                        icon: Icons.person_rounded,
+                        iconGradient: [
+                          AppTheme.primary,
+                          const Color(0xFF7C4DFF),
+                        ],
+                        buttonLabel: 'Open Profile',
+                        onPressed: () =>
+                            _openScreen(context, const ProfileScreen()),
+                      ),
+                      _FeatureTile(
+                        height: tallHeight,
+                        title: 'Scan History',
+                        subtitle:
+                            'Recent OCR timelines and medicine lookup context.',
+                        icon: Icons.history_toggle_off_rounded,
+                        iconGradient: [
+                          const Color(0xFF6366F1),
+                          const Color(0xFF8B5CF6),
+                        ],
+                        buttonLabel: 'View Recent',
+                        onPressed: () =>
+                            _openScreen(context, const ScannerScreen()),
+                      ),
+                    ];
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              AnimationConfiguration.staggeredList(
+                                position: 0,
+                                duration: const Duration(milliseconds: 380),
+                                child: SlideAnimation(
+                                  verticalOffset: 26,
+                                  child: FadeInAnimation(child: tiles[0]),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              AnimationConfiguration.staggeredList(
+                                position: 1,
+                                duration: const Duration(milliseconds: 380),
+                                child: SlideAnimation(
+                                  verticalOffset: 26,
+                                  child: FadeInAnimation(child: tiles[1]),
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              AnimationConfiguration.staggeredList(
+                                position: 2,
+                                duration: const Duration(milliseconds: 380),
+                                child: SlideAnimation(
+                                  verticalOffset: 26,
+                                  child: FadeInAnimation(child: tiles[2]),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              AnimationConfiguration.staggeredList(
+                                position: 3,
+                                duration: const Duration(milliseconds: 380),
+                                child: SlideAnimation(
+                                  verticalOffset: 26,
+                                  child: FadeInAnimation(child: tiles[3]),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-              sliver: SliverToBoxAdapter(
-                child: AnimationLimiter(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.maxWidth;
-                      final gap = 14.0;
-                      final itemWidth = (width - gap) / 2;
-                      final shortHeight = itemWidth * 0.76;
-                      final tallHeight = itemWidth * 1.02;
-
-                      final tiles = [
-                        _FeatureTile(
-                          height: tallHeight,
-                          title: 'Nearby Pharmacies',
-                          subtitle:
-                              'Locate the best-matched pharmacies near your current location.',
-                          icon: Icons.local_pharmacy_rounded,
-                          iconGradient: [AppTheme.secondary, AppTheme.accent],
-                          buttonLabel: 'Open Map',
-                          onPressed: () =>
-                              _openScreen(context, const MapScreen()),
-                        ),
-                        _QuickStatsTile(height: shortHeight),
-                        _FeatureTile(
-                          height: shortHeight,
-                          title: 'My Profile',
-                          subtitle: 'Health details and preferences.',
-                          icon: Icons.person_rounded,
-                          iconGradient: [
-                            AppTheme.primary,
-                            const Color(0xFF7C4DFF),
-                          ],
-                          buttonLabel: 'Open Profile',
-                          onPressed: () =>
-                              _openScreen(context, const ProfileScreen()),
-                        ),
-                        _FeatureTile(
-                          height: tallHeight,
-                          title: 'Scan History',
-                          subtitle:
-                              'Recent OCR timelines and medicine lookup context.',
-                          icon: Icons.history_toggle_off_rounded,
-                          iconGradient: [
-                            const Color(0xFF6366F1),
-                            const Color(0xFF8B5CF6),
-                          ],
-                          buttonLabel: 'View Recent',
-                          onPressed: () =>
-                              _openScreen(context, const ScannerScreen()),
-                        ),
-                      ];
-
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              children: [
-                                AnimationConfiguration.staggeredList(
-                                  position: 0,
-                                  duration: const Duration(milliseconds: 380),
-                                  child: SlideAnimation(
-                                    verticalOffset: 26,
-                                    child: FadeInAnimation(child: tiles[0]),
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                AnimationConfiguration.staggeredList(
-                                  position: 1,
-                                  duration: const Duration(milliseconds: 380),
-                                  child: SlideAnimation(
-                                    verticalOffset: 26,
-                                    child: FadeInAnimation(child: tiles[1]),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                AnimationConfiguration.staggeredList(
-                                  position: 2,
-                                  duration: const Duration(milliseconds: 380),
-                                  child: SlideAnimation(
-                                    verticalOffset: 26,
-                                    child: FadeInAnimation(child: tiles[2]),
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                AnimationConfiguration.staggeredList(
-                                  position: 3,
-                                  duration: const Duration(milliseconds: 380),
-                                  child: SlideAnimation(
-                                    verticalOffset: 26,
-                                    child: FadeInAnimation(child: tiles[3]),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
