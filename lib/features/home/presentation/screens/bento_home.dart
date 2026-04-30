@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_prescription_navigator/core/index.dart';
 
 import '../../../pharmacy_map/presentation/screens/map_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../scanner/presentation/screens/scanner_screen.dart';
+import '../../../prescriptions/presentation/providers/prescriptions_provider.dart';
+import '../../../prescriptions/data/models/prescription_model.dart';
 
 class BentoHomeScreen extends StatelessWidget {
   const BentoHomeScreen({super.key});
@@ -262,6 +265,123 @@ class BentoHomeScreen extends StatelessWidget {
                         buttonLabel: 'Open Profile',
                         onPressed: () =>
                             _openScreen(context, const ProfileScreen()),
+                      ),
+                      // Prescriptions section (patient)
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverToBoxAdapter(
+                          child: Consumer(
+                            builder: (context, ref, _) {
+                              final state = ref.watch(prescriptionsProvider);
+                              final theme = Theme.of(context);
+
+                              Widget body;
+                              switch (state.status) {
+                                case PrescriptionsStatus.loading:
+                                  body = const SizedBox(
+                                    height: 120,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                  break;
+                                case PrescriptionsStatus.error:
+                                  body = Card(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Text(
+                                        'Error: ${state.errorMessage ?? 'Unknown error'}',
+                                        style: theme.textTheme.bodyMedium,
+                                      ),
+                                    ),
+                                  );
+                                  break;
+                                case PrescriptionsStatus.empty:
+                                  body = Card(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Text(
+                                        'No prescriptions found.',
+                                        style: theme.textTheme.bodyMedium,
+                                      ),
+                                    ),
+                                  );
+                                  break;
+                                case PrescriptionsStatus.loaded:
+                                  body = Column(
+                                    children: state.items.map((p) {
+                                      return Container(
+                                        width: double.infinity,
+                                        margin: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        padding: const EdgeInsets.all(14),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          border: Border.all(
+                                            color: AppTheme.border,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Prescription • ${p.createdAt.toLocal().toString().split(' ').first}',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color:
+                                                        AppTheme.textSecondary,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              p.medications
+                                                  .map((m) => m.name)
+                                                  .take(3)
+                                                  .join(', '),
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            if (p.notes != null)
+                                              Text(
+                                                p.notes!,
+                                                style:
+                                                    theme.textTheme.bodySmall,
+                                              ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                  break;
+                                default:
+                                  body = const SizedBox.shrink();
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'My Prescriptions',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  body,
+                                  const SizedBox(height: 24),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
                       ),
                       _FeatureTile(
                         height: tallHeight,

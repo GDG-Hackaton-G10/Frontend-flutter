@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/auth/user_role.dart';
+import '../../../pharmacy/presentation/screens/pharmacy_dashboard_screen.dart';
+import '../../../pharmacy/presentation/screens/pharmacy_profile_screen.dart';
 import '../../../pharmacy_map/presentation/screens/map_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../scanner/presentation/screens/scanner_screen.dart';
 import 'bento_home.dart';
 
 class MainNavigationWrapper extends StatefulWidget {
-  const MainNavigationWrapper({super.key, this.initialIndex = 0});
+  const MainNavigationWrapper({
+    super.key,
+    required this.role,
+    this.initialIndex = 0,
+  });
 
+  final UserRole role;
   final int initialIndex;
 
   @override
@@ -30,11 +38,12 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final isPharmacy = widget.role == UserRole.pharmacy;
     final pages = <Widget>[
-      const BentoHomeScreen(),
+      isPharmacy ? const PharmacyDashboardScreen() : const BentoHomeScreen(),
       const MapScreen(),
       const _HistoryView(),
-      const ProfileScreen(),
+      isPharmacy ? const PharmacyProfileScreen() : const ProfileScreen(),
     ];
 
     return Scaffold(
@@ -46,19 +55,22 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFF2563EB),
         unselectedItemColor: const Color(0xFF64748B),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Home',
+            icon: const Icon(Icons.home_rounded),
+            label: isPharmacy ? 'Dashboard' : 'Home',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.map_rounded), label: 'Map'),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.map_rounded),
+            label: 'Map',
+          ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.history_rounded),
             label: 'History',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.person_rounded),
+            label: isPharmacy ? 'Pharmacy' : 'Profile',
           ),
         ],
       ),
