@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_client.dart';
+import 'api_constants.dart';
+import 'auth_api_client.dart';
 import '../../features/auth/data/datasources/token_secure_storage.dart';
 import '../../features/auth/data/interceptors/auth_interceptor.dart';
 
@@ -20,7 +22,7 @@ final authSessionVersionProvider = StateProvider<int>((ref) => 0);
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'https://your-api.com',
+      baseUrl: ApiConstants.baseUrl,
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 5),
     ),
@@ -39,6 +41,16 @@ final dioProvider = Provider<Dio>((ref) {
   );
 
   return dio;
+});
+
+final authApiClientProvider = Provider<AuthApiClient>((ref) {
+  final tokenStorage = ref.watch(tokenSecureStorageProvider);
+  return AuthApiClient(
+    tokenStorage: tokenStorage,
+    onUnauthorized: () async {
+      ref.read(authSessionVersionProvider.notifier).state++;
+    },
+  );
 });
 
 final apiClientProvider = Provider<ApiClient>((ref) {

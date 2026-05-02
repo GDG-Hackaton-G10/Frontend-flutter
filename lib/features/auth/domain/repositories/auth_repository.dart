@@ -1,9 +1,11 @@
 import '../entities/auth_response_entity.dart';
+import '../../../../core/auth/user_role.dart';
 
 abstract class AuthRepository {
   Future<AuthResponseEntity> register({
     required String email,
     required String password,
+    required UserRole role,
     String? name,
   });
 

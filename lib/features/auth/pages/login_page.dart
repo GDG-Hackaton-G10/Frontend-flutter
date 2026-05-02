@@ -1,15 +1,13 @@
-import '../../../core/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_controller.dart';
-import '../providers/auth_state.dart';
+import '../../../core/auth/user_role.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../widgets/auth_hero_illustration.dart';
 import '../widgets/auth_primary_button.dart';
 import '../widgets/auth_text_field.dart';
 import 'forgot_password_page.dart';
+import 'auth_wrapper.dart';
 import 'register_page.dart';
-import '../../home/presentation/screens/main_navigation_wrapper.dart';
-import '../../pharmacy/presentation/screens/pharmacy_dashboard_screen.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -33,8 +31,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(authControllerProvider);
-    final loading = state.status == AuthStatus.loading;
+    final state = ref.watch(authProvider);
+    final loading = state.isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -188,34 +186,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  // ... (Keep existing _submit and _validate methods)
   Future<void> _submit() async {
     final valid = _formKey.currentState?.validate() ?? false;
     if (!valid) return;
 
-    if (_roleIndex == 0) {
-      ref
+    final role = _roleIndex == 0 ? UserRole.patient : UserRole.pharmacy;
+
+    try {
+      await ref
           .read(authProvider.notifier)
-          .loginAsPatient(
-            _emailController.text.trim(),
-            'uid_${DateTime.now().millisecondsSinceEpoch}',
+          .login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            role: role,
           );
-      _showSuccessAndNavigate(
-        const MainNavigationWrapper(),
-        'Sign-in Successful!',
-      );
-    } else {
-      ref
-          .read(authProvider.notifier)
-          .loginAsPharmacy(
-            _emailController.text.trim(),
-            'uid_${DateTime.now().millisecondsSinceEpoch}',
-          );
-      ref.read(authProvider.notifier).updateProfileStatus(true);
-      _showSuccessAndNavigate(
-        const PharmacyDashboardScreen(),
-        'Sign-in Successful!',
-      );
+      if (!mounted) return;
+      await _showSuccessAndNavigate(const AuthWrapper(), 'Sign-in Successful!');
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Exception: ', '')),
+          ),
+        );
     }
   }
 

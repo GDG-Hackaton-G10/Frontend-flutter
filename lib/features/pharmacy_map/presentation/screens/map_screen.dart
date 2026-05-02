@@ -8,18 +8,22 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_prescription_navigator/core/index.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key, this.searchQuery});
+import '../providers/pharmacy_lookup_provider.dart';
+
+class MapScreen extends ConsumerStatefulWidget {
+  const MapScreen({super.key, this.searchQuery, this.medicines = const []});
 
   final String? searchQuery;
+  final List<String> medicines;
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen>
+class _MapScreenState extends ConsumerState<MapScreen>
     with SingleTickerProviderStateMixin {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
@@ -33,6 +37,8 @@ class _MapScreenState extends State<MapScreen>
   bool _isLoading = false;
   bool _isFilterLoading = false;
   String? _activeQuery;
+  List<String> _activeMedicines = const [];
+  bool _hasLoadedBackendPharmacies = false;
 
   late final AnimationController _pulseController;
 
@@ -40,8 +46,12 @@ class _MapScreenState extends State<MapScreen>
   void initState() {
     super.initState();
     _activeQuery = _normalizeQuery(widget.searchQuery);
+    _activeMedicines = widget.medicines
+        .map((medicine) => medicine.trim())
+        .where((medicine) => medicine.isNotEmpty)
+        .toList();
     _searchController.text = _activeQuery ?? '';
-    _isFilterLoading = _activeQuery != null;
+    _isFilterLoading = _activeQuery != null || _activeMedicines.isNotEmpty;
 
     _pulseController = AnimationController(
       vsync: this,
@@ -50,7 +60,7 @@ class _MapScreenState extends State<MapScreen>
 
     _startLocationTracking();
 
-    if (_activeQuery != null) {
+    if (_activeQuery != null && _activeMedicines.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _filterByMedicine(_activeQuery!);
@@ -109,6 +119,77 @@ class _MapScreenState extends State<MapScreen>
     };
   }
 
+  Future<void> _loadNearbyPharmacies() async {
+    if (_currentUserLocation == null || _hasLoadedBackendPharmacies) {
+      return;
+    }
+
+    final medicines = _activeMedicines.isNotEmpty
+        ? _activeMedicines
+        : (_activeQuery == null ? const <String>[] : <String>[_activeQuery!]);
+
+    if (medicines.isEmpty) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _isFilterLoading = true;
+      });
+    }
+
+    try {
+      final pharmacies = await ref
+          .read(pharmacyLookupServiceProvider)
+          .fetchNearbyPharmacies(
+            medicines: medicines,
+            latitude: _currentUserLocation!.latitude,
+            longitude: _currentUserLocation!.longitude,
+          );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (pharmacies.isNotEmpty) {
+        setState(() {
+          _allPharmacies
+            ..clear()
+            ..addAll(
+              pharmacies.map((pharmacy) {
+                return _buildPharmacyEntry(
+                  name: pharmacy['name']?.toString() ?? 'Pharmacy',
+                  lat: (pharmacy['lat'] as num).toDouble(),
+                  lng: (pharmacy['lng'] as num).toDouble(),
+                  type: pharmacy['type']?.toString() ?? 'Nearby',
+                );
+              }),
+            );
+          _sortPharmacies();
+          _visiblePharmacies = List<Map<String, dynamic>>.from(_allPharmacies);
+          _hasLoadedBackendPharmacies = true;
+        });
+
+        _applyCurrentFilter(moveCamera: true);
+        return;
+      }
+    } catch (error) {
+      debugPrint('Nearby pharmacy fetch error: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isFilterLoading = false;
+        });
+      }
+    }
+
+    if (_allPharmacies.isEmpty) {
+      await _loadLocalData();
+    }
+  }
+
   void _applyCurrentFilter({bool moveCamera = false}) {
     final query = _activeQuery?.toLowerCase();
     final filtered = query == null
@@ -140,6 +221,7 @@ class _MapScreenState extends State<MapScreen>
   void _filterByMedicine(String query) {
     _activeQuery = _normalizeQuery(query);
     _searchController.text = _activeQuery ?? '';
+    _hasLoadedBackendPharmacies = false;
 
     if (_activeQuery == null) {
       _applyCurrentFilter(moveCamera: true);
@@ -291,6 +373,11 @@ class _MapScreenState extends State<MapScreen>
           });
           _applyCurrentFilter();
 
+          if ((_activeMedicines.isNotEmpty || _activeQuery != null) &&
+              !_hasLoadedBackendPharmacies) {
+            _loadNearbyPharmacies();
+          }
+
           if (_allPharmacies.isEmpty) {
             _loadLocalData();
           }
@@ -371,7 +458,9 @@ class _MapScreenState extends State<MapScreen>
               initialCenter: const LatLng(9.01, 38.74),
               initialZoom: 13,
               onMapEvent: (event) {
-                if (event is MapEventMoveEnd) {
+                if (event is MapEventMoveEnd &&
+                    _activeMedicines.isEmpty &&
+                    _activeQuery == null) {
                   _fetchPublicData();
                 }
               },

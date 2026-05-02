@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_providers.dart';
+import '../../../core/auth/user_role.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/usecases/login_user.dart';
 import '../domain/usecases/logout_user.dart';
@@ -9,21 +10,22 @@ import '../domain/usecases/request_password_reset.dart';
 import 'auth_providers.dart';
 import 'auth_state.dart';
 
-final authControllerProvider =
-    StateNotifierProvider<AuthController, AuthState>((ref) {
-      ref.watch(authSessionVersionProvider);
+final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
+  (ref) {
+    ref.watch(authSessionVersionProvider);
 
-      final controller = AuthController(
-        authRepository: ref.watch(authRepositoryProvider),
-        registerUser: ref.watch(registerUserProvider),
-        loginUser: ref.watch(loginUserProvider),
-        logoutUser: ref.watch(logoutUserProvider),
-        requestPasswordReset: ref.watch(requestPasswordResetProvider),
-      );
+    final controller = AuthController(
+      authRepository: ref.watch(authRepositoryProvider),
+      registerUser: ref.watch(registerUserProvider),
+      loginUser: ref.watch(loginUserProvider),
+      logoutUser: ref.watch(logoutUserProvider),
+      requestPasswordReset: ref.watch(requestPasswordResetProvider),
+    );
 
-      controller.initialize();
-      return controller;
-    });
+    controller.initialize();
+    return controller;
+  },
+);
 
 class AuthController extends StateNotifier<AuthState> {
   AuthController({
@@ -32,12 +34,12 @@ class AuthController extends StateNotifier<AuthState> {
     required LoginUser loginUser,
     required LogoutUser logoutUser,
     required RequestPasswordReset requestPasswordReset,
-  })  : _authRepository = authRepository,
-        _registerUser = registerUser,
-        _loginUser = loginUser,
-        _logoutUser = logoutUser,
-        _requestPasswordReset = requestPasswordReset,
-        super(const AuthState());
+  }) : _authRepository = authRepository,
+       _registerUser = registerUser,
+       _loginUser = loginUser,
+       _logoutUser = logoutUser,
+       _requestPasswordReset = requestPasswordReset,
+       super(const AuthState());
 
   final AuthRepository _authRepository;
   final RegisterUser _registerUser;
@@ -57,7 +59,9 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       final loggedIn = await _authRepository.isLoggedIn();
       state = state.copyWith(
-        status: loggedIn ? AuthStatus.authenticated : AuthStatus.unauthenticated,
+        status: loggedIn
+            ? AuthStatus.authenticated
+            : AuthStatus.unauthenticated,
         clearMessage: true,
       );
     } catch (_) {
@@ -71,6 +75,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> register({
     required String email,
     required String password,
+    required UserRole role,
     String? name,
   }) async {
     if (_busy) {
@@ -81,7 +86,12 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, clearMessage: true);
 
     try {
-      await _registerUser(email: email, password: password, name: name);
+      await _registerUser(
+        email: email,
+        password: password,
+        role: role,
+        name: name,
+      );
       state = state.copyWith(
         status: AuthStatus.authenticated,
         message: 'Account created successfully.',
@@ -96,10 +106,7 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     if (_busy) {
       return;
     }
@@ -175,7 +182,10 @@ class AuthController extends StateNotifier<AuthState> {
 
   void clearError() {
     if (state.status == AuthStatus.error) {
-      state = state.copyWith(status: AuthStatus.unauthenticated, clearMessage: true);
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        clearMessage: true,
+      );
     }
   }
 }

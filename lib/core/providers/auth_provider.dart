@@ -1,6 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../features/auth/domain/entities/auth_response_entity.dart';
+import '../../features/auth/providers/auth_providers.dart';
 import '../auth/user_role.dart';
+import '../network/api_providers.dart';
 
 class AuthState {
   final UserRole role;
@@ -39,27 +45,64 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState()) {
+  AuthNotifier(this._ref) : super(const AuthState()) {
+    _ref.listen<int>(authSessionVersionProvider, (previous, next) {
+      if (previous != null && previous != next) {
+        unawaited(logout(clearRemoteSession: false));
+      }
+    });
     _loadFromPrefs();
   }
+
+  final Ref _ref;
 
   Future<void> _loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-    if (!isLoggedIn) return;
-    final roleStr = prefs.getString('role');
-    final email = prefs.getString('email');
-    final uid = prefs.getString('uid');
-    final role = UserRole.values.firstWhere(
-      (e) => e.toString() == roleStr,
-      orElse: () => UserRole.guest,
-    );
-    state = state.copyWith(
-      isAuthenticated: isLoggedIn,
-      role: role,
-      email: email,
-      uid: uid,
-    );
+    if (isLoggedIn) {
+      final roleStr = prefs.getString('role');
+      final email = prefs.getString('email');
+      final uid = prefs.getString('uid');
+      final isProfileComplete = prefs.getBool('isProfileComplete') ?? false;
+      final role = UserRole.values.firstWhere(
+        (e) => e.toString() == roleStr,
+        orElse: () => UserRole.guest,
+      );
+
+      state = state.copyWith(
+        isAuthenticated: isLoggedIn,
+        role: role,
+        email: email,
+        uid: uid,
+        isProfileComplete: isProfileComplete,
+      );
+      return;
+    }
+
+    // If SharedPreferences does not indicate a logged-in state, try secure storage.
+    try {
+      final tokenStorage = _ref.read(tokenSecureStorageProvider);
+      final accessToken = await tokenStorage.readAccessToken();
+      if (accessToken != null && accessToken.isNotEmpty) {
+        // We have a token but no prefs; treat user as authenticated.
+        final roleStr = prefs.getString('role');
+        final role = UserRole.values.firstWhere(
+          (e) => e.toString() == roleStr,
+          orElse: () => UserRole.patient,
+        );
+
+        state = state.copyWith(
+          isAuthenticated: true,
+          role: role,
+          email: prefs.getString('email'),
+          uid: prefs.getString('uid'),
+          isProfileComplete: prefs.getBool('isProfileComplete') ?? false,
+        );
+        await _saveToPrefs();
+      }
+    } catch (_) {
+      // Ignore secure storage read errors and continue as logged out.
+    }
   }
 
   Future<void> _saveToPrefs() async {
@@ -68,41 +111,134 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await prefs.setString('role', state.role.toString());
     await prefs.setString('email', state.email ?? '');
     await prefs.setString('uid', state.uid ?? '');
+    await prefs.setBool('isProfileComplete', state.isProfileComplete);
+  }
+
+  Future<void> _clearPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+    await prefs.remove('role');
+    await prefs.remove('email');
+    await prefs.remove('uid');
+    await prefs.setBool('isProfileComplete', false);
+  }
+
+  Future<void> login({
+    required String email,
+    required String password,
+    required UserRole role,
+  }) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final response = await _ref
+          .read(authServiceProvider)
+          .login(email: email, password: password);
+      await _applySession(response, role: role, fallbackEmail: email);
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> register({
+    required String email,
+    required String password,
+    required UserRole role,
+    String? name,
+  }) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final response = await _ref
+          .read(authServiceProvider)
+          .register(email: email, password: password, role: role, name: name);
+      await _applySession(response, role: role, fallbackEmail: email);
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> requestPasswordReset({required String email}) {
+    return _ref.read(authServiceProvider).requestPasswordReset(email: email);
+  }
+
+  Future<void> logout({bool clearRemoteSession = true}) async {
+    if (clearRemoteSession) {
+      try {
+        await _ref.read(authServiceProvider).logout();
+      } catch (_) {
+        // Always clear local session state, even if the remote logout fails.
+      }
+    }
+
+    state = const AuthState();
+    await _clearPrefs();
   }
 
   void loginAsPatient(String email, String uid) {
-    state = state.copyWith(
+    _applyLocalSession(
       role: UserRole.patient,
-      isAuthenticated: true,
       email: email,
       uid: uid,
-      isLoading: false,
+      profileComplete: false,
     );
-    _saveToPrefs();
   }
 
   void loginAsPharmacy(String email, String uid) {
-    state = state.copyWith(
+    _applyLocalSession(
       role: UserRole.pharmacy,
-      isAuthenticated: true,
       email: email,
       uid: uid,
-      isLoading: false,
+      profileComplete: true,
     );
-    _saveToPrefs();
   }
 
   void updateProfileStatus(bool complete) {
     state = state.copyWith(isProfileComplete: complete);
-    _saveToPrefs();
+    unawaited(_saveToPrefs());
   }
 
-  void logout() {
-    state = const AuthState();
-    _saveToPrefs();
+  Future<void> _applySession(
+    AuthResponseEntity response, {
+    required UserRole role,
+    required String fallbackEmail,
+  }) async {
+    final user = response.user;
+    final resolvedEmail = user?.email.isNotEmpty == true
+        ? user!.email
+        : fallbackEmail;
+    final resolvedUid = user?.id.isNotEmpty == true
+        ? user!.id
+        : 'uid_${DateTime.now().millisecondsSinceEpoch}';
+
+    state = state.copyWith(
+      role: role,
+      isAuthenticated: true,
+      email: resolvedEmail,
+      uid: resolvedUid,
+      isProfileComplete: role == UserRole.pharmacy,
+    );
+    await _saveToPrefs();
+  }
+
+  void _applyLocalSession({
+    required UserRole role,
+    required String email,
+    required String uid,
+    required bool profileComplete,
+  }) {
+    state = state.copyWith(
+      role: role,
+      isAuthenticated: true,
+      email: email,
+      uid: uid,
+      isProfileComplete: profileComplete,
+      isLoading: false,
+    );
+    unawaited(_saveToPrefs());
   }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-  (ref) => AuthNotifier(),
+  (ref) => AuthNotifier(ref),
 );

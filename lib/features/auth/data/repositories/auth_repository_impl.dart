@@ -1,4 +1,5 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/auth_api_client.dart';
+import '../../../../core/auth/user_role.dart';
 
 import '../../domain/entities/auth_response_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -12,15 +13,18 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remoteDataSource, this._tokenStorage);
 
   @override
+  @override
   Future<AuthResponseEntity> register({
     required String email,
     required String password,
+    required UserRole role,
     String? name,
   }) async {
     try {
       final response = await _remoteDataSource.register(
         email: email,
         password: password,
+        role: role,
         name: name,
       );
 
@@ -30,7 +34,9 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       return response;
-    } on DioException catch (e) {
+    } on AuthApiException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
       throw Exception(_extractErrorMessage(e));
     }
   }
@@ -52,7 +58,9 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       return response;
-    } on DioException catch (e) {
+    } on AuthApiException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
       throw Exception(_extractErrorMessage(e));
     }
   }
@@ -75,7 +83,9 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       return response.accessToken;
-    } on DioException catch (e) {
+    } on AuthApiException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
       throw Exception(_extractErrorMessage(e));
     }
   }
@@ -98,7 +108,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> requestPasswordReset({required String email}) async {
     try {
       await _remoteDataSource.requestPasswordReset(email: email);
-    } on DioException catch (e) {
+    } on AuthApiException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
       throw Exception(_extractErrorMessage(e));
     }
   }
@@ -116,45 +128,12 @@ class AuthRepositoryImpl implements AuthRepository {
     return _tokenStorage.readAccessToken();
   }
 
-  String _extractErrorMessage(DioException e) {
-    final statusCode = e.response?.statusCode;
-    final data = e.response?.data;
-
-    if (data is Map<String, dynamic>) {
-      for (final key in ['message', 'error', 'detail', 'title']) {
-        final value = data[key];
-        if (value is String && value.trim().isNotEmpty) {
-          return value;
-        }
-      }
-
-      final errors = data['errors'];
-      if (errors is Map && errors.isNotEmpty) {
-        final firstValue = errors.values.first;
-
-        if (firstValue is List && firstValue.isNotEmpty) {
-          return firstValue.first.toString();
-        }
-
-        return firstValue.toString();
-      }
-
-      return 'HTTP $statusCode: ${data.toString()}';
+  String _extractErrorMessage(Object error) {
+    final message = error.toString();
+    if (message.startsWith('Exception: ')) {
+      return message.replaceFirst('Exception: ', '');
     }
 
-    if (data is String && data.trim().isNotEmpty) {
-      return statusCode != null ? 'HTTP $statusCode: $data' : data;
-    }
-
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return 'Connection timeout. Please try again.';
-      case DioExceptionType.connectionError:
-        return 'Cannot reach server. Backend may not be running yet.';
-      default:
-        return 'Request failed${statusCode != null ? ' (HTTP $statusCode)' : ''}. Please try again.';
-    }
+    return message;
   }
 }

@@ -1,18 +1,13 @@
-import '../../../core/providers/auth_provider.dart';
-// import '../../../core/auth/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// import '../providers/auth_controller.dart';
-// import '../providers/auth_state.dart';
+import '../../../core/auth/user_role.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../widgets/auth_brand_header.dart';
 import '../widgets/auth_hero_illustration.dart';
-// import '../widgets/auth_message_banner.dart';
-// import '../widgets/auth_or_divider.dart';
 import '../widgets/auth_primary_button.dart';
 import '../widgets/auth_screen_frame.dart';
-// import '../widgets/auth_social_button.dart';
 import '../widgets/auth_text_field.dart';
+import 'auth_wrapper.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -263,27 +258,35 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final valid = _formKey.currentState?.validate() ?? false;
     if (!valid || !_agreeToTerms) return;
 
-    if (_roleIndex == 0) {
-      ref
+    final role = _roleIndex == 0 ? UserRole.patient : UserRole.pharmacy;
+
+    try {
+      await ref
           .read(authProvider.notifier)
-          .loginAsPatient(
-            _emailController.text.trim(),
-            'uid_${DateTime.now().millisecondsSinceEpoch}',
+          .register(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            role: role,
+            name: _nameController.text.trim().isEmpty
+                ? null
+                : _nameController.text.trim(),
           );
-    } else {
-      ref
-          .read(authProvider.notifier)
-          .loginAsPharmacy(
-            _emailController.text.trim(),
-            'uid_${DateTime.now().millisecondsSinceEpoch}',
-          );
-      ref.read(authProvider.notifier).updateProfileStatus(true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Account Created!')));
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        (route) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
     }
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Account Created!')));
-    // No navigation here; AuthWrapper will handle redirect.
   }
 
   String? _validateEmail(String? value) {

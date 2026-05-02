@@ -6,19 +6,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_prescription_navigator/core/index.dart';
 
 import '../../../pharmacy_map/presentation/screens/map_screen.dart';
 import '../../data/services/ocr_service.dart';
+import '../providers/medicine_scan_provider.dart';
 
-class ScannerScreen extends StatefulWidget {
+class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
 
   @override
-  State<ScannerScreen> createState() => _ScannerScreenState();
+  ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen>
+class _ScannerScreenState extends ConsumerState<ScannerScreen>
     with SingleTickerProviderStateMixin {
   final ImagePicker _imagePicker = ImagePicker();
   final OCRService _ocrService = OCRService();
@@ -26,6 +28,7 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   File? _capturedImage;
   String? _recognizedText;
+  List<String> _extractedMedicines = const [];
   bool _isProcessing = false;
 
   late final AnimationController _lineController;
@@ -99,8 +102,15 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Future<void> _openMapWithQuery() async {
-    final detectedQuery = _extractFirstDetectedString(_recognizedText);
-    final widgetName = detectedQuery ?? 'Scanned Medicine';
+    final detectedQuery = _extractedMedicines.isNotEmpty
+        ? _extractedMedicines.first
+        : _extractFirstDetectedString(_recognizedText);
+    final medicineNames = _extractedMedicines.isNotEmpty
+        ? _extractedMedicines
+        : (detectedQuery == null ? const <String>[] : <String>[detectedQuery]);
+    final widgetName = medicineNames.isNotEmpty
+        ? medicineNames.first
+        : 'Scanned Medicine';
 
     await _widgetService.saveWidgetData(widgetName);
 
@@ -111,7 +121,10 @@ class _ScannerScreenState extends State<ScannerScreen>
     }
 
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => MapScreen(searchQuery: detectedQuery)),
+      MaterialPageRoute(
+        builder: (_) =>
+            MapScreen(searchQuery: detectedQuery, medicines: medicineNames),
+      ),
     );
   }
 
@@ -134,6 +147,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       setState(() {
         _capturedImage = File(pickedImage.path);
         _recognizedText = null;
+        _extractedMedicines = const [];
         _isProcessing = true;
       });
 
@@ -148,6 +162,24 @@ class _ScannerScreenState extends State<ScannerScreen>
             ? 'No readable text found in the image.'
             : extractedText.trim();
       });
+
+      if (extractedText.trim().isNotEmpty) {
+        try {
+          final medicines = await ref
+              .read(medicineScanServiceProvider)
+              .extractMedicines(rawText: extractedText.trim());
+
+          if (!mounted) {
+            return;
+          }
+
+          setState(() {
+            _extractedMedicines = medicines;
+          });
+        } catch (error) {
+          debugPrint('Medicine extraction error: $error');
+        }
+      }
 
       HapticFeedback.mediumImpact();
     } catch (_) {

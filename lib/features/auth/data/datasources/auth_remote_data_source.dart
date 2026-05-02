@@ -1,29 +1,36 @@
-import 'package:dio/dio.dart';
-
 import 'auth_data_source.dart';
 import '../models/auth_response_model.dart';
+import '../../../../core/network/auth_api_client.dart';
+import '../../../../core/auth/user_role.dart';
 
 class AuthRemoteDataSource implements AuthDataSource {
-  final Dio _dio;
+  final AuthApiClient _client;
 
-  AuthRemoteDataSource(this._dio);
+  AuthRemoteDataSource(this._client);
 
   @override
   Future<AuthResponseModel> register({
     required String email,
     required String password,
+    required UserRole role,
     String? name,
   }) async {
-    final response = await _dio.post(
-      '/api/v1/auth/register',
-      data: {
+    final resolvedName = (name != null && name.trim().isNotEmpty)
+        ? name
+        : email.split('@').first;
+
+    final response = await _client.postJson(
+      '/auth/register',
+      body: {
         'email': email,
         'password': password,
-        if (name != null && name.trim().isNotEmpty) 'name': name,
+        'role': role.toString().split('.').last,
+        'name': resolvedName,
       },
+      includeAuth: false,
     );
 
-    return _parseAuthResponse(response.data);
+    return _parseAuthResponse(response);
   }
 
   @override
@@ -31,43 +38,40 @@ class AuthRemoteDataSource implements AuthDataSource {
     required String email,
     required String password,
   }) async {
-    final response = await _dio.post(
-      '/api/v1/auth/login',
-      data: {
-        'email': email,
-        'password': password,
-      },
+    final response = await _client.postJson(
+      '/auth/login',
+      body: {'email': email, 'password': password},
     );
 
-    return _parseAuthResponse(response.data);
+    return _parseAuthResponse(response);
   }
 
   @override
   Future<AuthResponseModel> refreshToken({required String refreshToken}) async {
-    final response = await _dio.post(
-      '/api/v1/auth/refresh-token',
-      data: {'refreshToken': refreshToken},
-      options: Options(extra: {'skipAuthRefresh': true}),
+    final response = await _client.postJson(
+      '/auth/refresh-token',
+      body: {'refreshToken': refreshToken},
+      includeAuth: false,
     );
 
-    return _parseAuthResponse(response.data);
+    return _parseAuthResponse(response);
   }
 
   @override
   Future<void> logout({required String refreshToken}) async {
-    await _dio.post(
-      '/api/v1/auth/logout',
-      data: {'refreshToken': refreshToken},
-      options: Options(extra: {'skipAuthRefresh': true}),
+    await _client.postJson(
+      '/auth/logout',
+      body: {'refreshToken': refreshToken},
+      includeAuth: false,
     );
   }
 
   @override
   Future<void> requestPasswordReset({required String email}) async {
-    await _dio.post(
-      '/api/v1/auth/forgot-password',
-      data: {'email': email},
-      options: Options(extra: {'skipAuthRefresh': true}),
+    await _client.postJson(
+      '/auth/forgot-password',
+      body: {'email': email},
+      includeAuth: false,
     );
   }
 

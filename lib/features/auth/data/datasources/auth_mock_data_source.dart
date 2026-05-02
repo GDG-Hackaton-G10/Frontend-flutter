@@ -1,6 +1,7 @@
 import 'auth_data_source.dart';
 import '../models/auth_response_model.dart';
 import '../models/user_model.dart';
+import '../../../../core/auth/user_role.dart';
 
 class AuthMockDataSource implements AuthDataSource {
   String? _mockRefreshToken;
@@ -9,6 +10,7 @@ class AuthMockDataSource implements AuthDataSource {
   Future<AuthResponseModel> register({
     required String email,
     required String password,
+    required UserRole role,
     String? name,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -23,7 +25,11 @@ class AuthMockDataSource implements AuthDataSource {
       user: UserModel(
         id: 'mock-user-$now',
         email: email,
-        name: name?.trim().isEmpty ?? true ? 'Hackathon User' : name?.trim(),
+        name: (name?.trim().isEmpty ?? true)
+            ? (role == UserRole.pharmacy
+                  ? '${email.split('@').first} Pharmacy'
+                  : 'Hackathon User')
+            : name?.trim(),
       ),
     );
   }
@@ -42,11 +48,7 @@ class AuthMockDataSource implements AuthDataSource {
     return AuthResponseModel(
       accessToken: 'mock-access-$now',
       refreshToken: refresh,
-      user: UserModel(
-        id: 'mock-user-1',
-        email: email,
-        name: 'Hackathon User',
-      ),
+      user: UserModel(id: 'mock-user-1', email: email, name: 'Hackathon User'),
     );
   }
 
